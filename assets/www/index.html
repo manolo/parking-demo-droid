@@ -35,8 +35,20 @@
     top: 20%;
 }
 @-webkit-keyframes spin {
-	0%  {-webkit-transform: rotate(0deg);}
-	100% {-webkit-transform: rotate(360deg);}
+    0%  {-webkit-transform: rotate(0deg);}
+    100% {-webkit-transform: rotate(360deg);}
+}
+#app {
+    -webkit-transition: all .8s;
+    position: absolute;
+    width: 100%;
+    height: 100%
+}
+.hidden {
+    opacity: 0;
+}
+.visible {
+    opacity: 1;
 }
 </style>
 </head>
@@ -53,45 +65,37 @@
               var iframe = document.getElementById('app');
               var loading = document.getElementById('loading');
               var offline = document.getElementById('offline');
+              var intervalId;
 
-              var src = iframe.src.replace(/#.*$/, '');
               function sendMessage(msg) {
-                // Select one mechanism: hash-fragment or postMessage
-                // iframe.src = src + '#cordova-' + msg;
                 iframe.contentWindow.postMessage("cordova-" + msg, "*");
               }
               function check() {
                 var sts = navigator.network.connection.type == Connection.NONE ? 'offline' : 'online';
                 sendMessage(sts);
               }
-              function showIframe(ev) {
-                if (loading.parentNode) {
-                  loading.parentNode.removeChild(loading);
-                  iframe.style.width = iframe.style.height = "100%";
-                  sendMessage('resume');
-                }
+              function resume() {
+                intervalId = setInterval(check, 30000);
+                sendMessage('resume');
               }
-              function showOffline() {
-                offline.style.display = 'block';
+              function pause() {
+                clearInterval(intervalId);
+                sendMessage('pause');
               }
+              function show(e) {
+                e.className = 'visible';
+              }
+              resume();
 
               // Listen for offline/online events
               document.addEventListener('offline', check, false);
               document.addEventListener('online', check, false);
-              document.addEventListener('resume', function(){sendMessage('resume')}, false);
-              document.addEventListener('pause', function(){sendMessage('pause')}, false);
-              // check the connection periodically
-              setInterval(check, 30000);
-
+              document.addEventListener('resume', resume, false);
+              document.addEventListener('pause', pause, false);
               // when vaadin app is loaded, it sends to the parent window a ready message
-              window.addEventListener('message', showIframe, false);
-
-              // If the app takes more than 3 secs to start, proly .manifest stuff is being loaded.
-              setTimeout(showOffline, 3000);
-
-              // if after a while we have not received any notification we show the iframe
-              // Here we could show an alert to the user or something
-              setTimeout(showIframe, 20000);
+              window.addEventListener('message', function(){show(iframe)}, false);
+              // If the app takes a while to start, proly .manifest stuff is being loaded.
+              setTimeout(function(){show(offline)}, 4000);
 
               // Ignore back button in android
               // document.addEventListener('backbutton', function() {}, false);
@@ -100,8 +104,9 @@
         <!-- A div to show in the meanwhile the app is loaded -->
         <div id='loading' style='font-size: 120%; font-family: helvetica; width: 100%; height: 100%; position: absolute; text-align: center;'>
           <div id='spinner'>}&gt;</div>
-          <div id='offline' style='display: none; position: absolute; top: 40%; padding: 15px'>Downloading offline application files.<br/> Please be patient.</div>
+          <div id='offline' class='hidden' style='position: absolute; top: 40%; padding: 15px'>Downloading offline application files.<br/> Please be patient.</div>
         </div>
-        <iframe id='app' style='width: 0px; height: 0px; position: absolute; border: none' src='http://jetty.gquery.org/parking/'/>
+        <!-- Load the app in an iframe so as we can pass messages, instead of using redirect -->
+        <iframe id='app' class='hidden' src='http://jetty.gquery.org/parking/'/>
     </body>
 </html>
