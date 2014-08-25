@@ -1,113 +1,33 @@
 <!DOCTYPE html>
-<!--
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-     KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
--->
 <html>
     <head>
         <meta charset="utf-8" />
         <meta name="format-detection" content="telephone=no" />
-        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
-        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
-        <title>Touchkit Demo App</title>
-<style>
-#spinner {
-    width: 1em;
-    font-size: 200%;
-    -webkit-animation: spin 4s infinite linear;
-    color: #00b4f0;
-    position: absolute;
-    left: calc(50% - 0.5em);
-    top: 20%;
-}
-@-webkit-keyframes spin {
-    0%  {-webkit-transform: rotate(0deg);}
-    100% {-webkit-transform: rotate(360deg);}
-}
-#app {
-    -webkit-transition: all .8s;
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border: none;
-}
-.hidden {
-    opacity: 0;
-}
-.visible {
-    opacity: 1;
-}
-</style>
-</head>
+        <!-- Other used options are: width=device-width, height=device-height, target-densitydpi=device-dpi
+             WARNING:
+              for iOS 7, remove width=device-width and height=device-height. See https://issues.apache.org/jira/browse/CB-4323
+              for Android, target-densitydpi=device-dpi could cause a small size of the app -->
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1" />
+        <title>Parking</title>
+    </head>
     <body style='margin: 0px'>
+        <!-- Be sure that network plugin is enabled -->
         <script type="text/javascript" src="cordova.js"></script>
+
+        <!-- Define your vaadin url here -->
         <script>
-          // Use cordova network plugin to inform the iframe about the connection
-          document.addEventListener('deviceready', function() {
-              if (!navigator.network || !navigator.network.connection || !Connection) {
-                 console.log(">>> ERROR, it seems cordova network connection plugin has not been loaded.");
-                 return;
-              }
+            // Mandatory: The url of your Vaadin mobile app.
+            window.vaadinAppUrl = 'http://hupa.app.fi/parking';
 
-              var iframe = document.getElementById('app');
-              var loading = document.getElementById('loading');
-              var offline = document.getElementById('offline');
-              var intervalId;
+            // Optional: You could disable iframe for certain devices.
+            // window.iframeDisabled = false;
 
-              function sendMessage(msg) {
-                iframe.contentWindow.postMessage("cordova-" + msg, "*");
-              }
-              function check() {
-                var sts = navigator.network.connection.type == Connection.NONE ? 'offline' : 'online';
-                sendMessage(sts);
-              }
-              function resume() {
-                intervalId = setInterval(check, 30000);
-                sendMessage('resume');
-              }
-              function pause() {
-                clearInterval(intervalId);
-                sendMessage('pause');
-              }
-              function show(e) {
-                e.className = 'visible';
-              }
-              resume();
-
-              // Listen for offline/online events
-              document.addEventListener('offline', check, false);
-              document.addEventListener('online', check, false);
-              document.addEventListener('resume', resume, false);
-              document.addEventListener('pause', pause, false);
-              // when vaadin app is loaded, it sends to the parent window a ready message
-              window.addEventListener('message', function(){show(iframe)}, false);
-              // If the app takes a while to start, proly .manifest stuff is being loaded.
-              setTimeout(function(){show(offline)}, 4000);
-
-              // Ignore back button in android
-              // document.addEventListener('backbutton', function() {}, false);
-          }, false);
+            // Optional: Add a top margin, useful to avoid status bar overlapping app.
+            // Note, that the recomended way is to use the Cordova StatusBar plugin.
+            window.iframeTopMargin = /(iPhone|iPad).+ OS (7|8)/i.test(navigator.userAgent) ? 20 : 0;
         </script>
-        <!-- A div to show in the meanwhile the app is loaded -->
-        <div id='loading' style='font-size: 120%; font-family: helvetica; width: 100%; height: 100%; position: absolute; text-align: center;'>
-          <div id='spinner'>}&gt;</div>
-          <div id='offline' class='hidden' style='position: absolute; top: 40%; padding: 15px'>Downloading offline application files.<br/> Please be patient.</div>
-        </div>
-        <!-- Load the app in an iframe so as we can pass messages, instead of using redirect -->
-        <iframe id='app' class='hidden' src='http://jetty.gquery.org/parking/'/>
+
+        <!-- Make Vaadin mobile script load the app and route cordova events to it -->
+        <script type="text/javascript" src="vaadinMobile.js"></script>
     </body>
 </html>
